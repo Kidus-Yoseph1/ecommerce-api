@@ -59,11 +59,23 @@ func (r *ProductRepo) GetProductbyId(id string) (*domain.Product, error) {
 
 func (r *ProductRepo) ListProduct(category string) ([]domain.Product, error) {
 	products := []domain.Product{}
-	rows, err := r.db.Query(`
-		SELECT id,  name,  description, category, price, stock_quantity, deleted_at, created_at, updated_at
-		FROM products
-		WHERE category =$1 AND deleted_at IS NULL
-	`, category)
+
+	var rows *sql.Rows
+	var err error
+
+	if category != "" {
+		rows, err = r.db.Query(`
+			SELECT id, name, description, category, price, stock_quantity, deleted_at, created_at, updated_at
+			FROM products
+			WHERE category = $1 AND deleted_at IS NULL
+		`, category)
+	} else {
+		rows, err = r.db.Query(`
+			SELECT id, name, description, category, price, stock_quantity, deleted_at, created_at, updated_at
+			FROM products
+			WHERE deleted_at IS NULL
+		`)
+	}
 
 	if err != nil {
 		return nil, err
@@ -72,16 +84,20 @@ func (r *ProductRepo) ListProduct(category string) ([]domain.Product, error) {
 
 	for rows.Next() {
 		var p domain.Product
-		rows.Scan(&p.Id, &p.Name,
+		rows.Scan(
+			&p.Id,
+			&p.Name,
 			&p.Description,
 			&p.Category,
 			&p.Price,
 			&p.StockQuantity,
 			&p.DeletedAt,
 			&p.CreatedAt,
-			&p.UpdatedAt)
+			&p.UpdatedAt,
+		)
 		products = append(products, p)
 	}
+
 	return products, nil
 }
 
