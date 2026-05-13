@@ -8,7 +8,11 @@ import (
 )
 
 type ProductHandler struct {
-	productService domain.ProductRepository
+	productService domain.ProductServiceInterface
+}
+
+func NewProductHandler(productService domain.ProductServiceInterface) *ProductHandler {
+	return &ProductHandler{productService: productService}
 }
 
 func (h *ProductHandler) AddProductHandler(c *gin.Context) {
@@ -30,15 +34,7 @@ func (h *ProductHandler) AddProductHandler(c *gin.Context) {
 		return
 	}
 
-	product := domain.Product{
-		Name:          input.Name,
-		Description:   input.Description,
-		Category:      input.Category,
-		Price:         input.Price,
-		StockQuantity: input.StockQuantity,
-	}
-
-	err := h.productService.AddProduct(product)
+	err := h.productService.AddProduct(input.Name, input.Description, input.Category, input.Price, input.StockQuantity)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
@@ -50,13 +46,13 @@ func (h *ProductHandler) AddProductHandler(c *gin.Context) {
 	response.Success(c, 201, gin.H{"message": "Product added"})
 }
 
-func (h *ProductHandler) GetProductbyIdHandler(c *gin.Context) {
+func (h *ProductHandler) GetProductByIDHandler(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.Error(c, 400, "id filed is required")
 		return
 	}
-	product, err := h.productService.GetProductbyId(id)
+	product, err := h.productService.GetProductByID(id)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
@@ -68,10 +64,10 @@ func (h *ProductHandler) GetProductbyIdHandler(c *gin.Context) {
 	response.Success(c, 200, gin.H{"product": product})
 }
 
-func (h *ProductHandler) ListProductHandler(c *gin.Context) {
+func (h *ProductHandler) ListProductsHandler(c *gin.Context) {
 	category := c.Query("category")
 
-	products, err := h.productService.ListProduct(category)
+	products, err := h.productService.ListProducts(category)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
@@ -108,16 +104,7 @@ func (h *ProductHandler) UpdateProductHandler(c *gin.Context) {
 		return
 	}
 
-	product := domain.Product{
-		Id:            id,
-		Name:          input.Name,
-		Description:   input.Description,
-		Category:      input.Category,
-		Price:         input.Price,
-		StockQuantity: input.StockQuantity,
-	}
-
-	err := h.productService.UpdateProduct(product)
+	err := h.productService.UpdateProduct(id, input.Name, input.Description, input.Category, input.Price, input.StockQuantity)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)

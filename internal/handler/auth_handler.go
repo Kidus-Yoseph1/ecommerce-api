@@ -7,3 +7,7 @@ import (
 type AuthHandler struct {
 	authService domain.AuthServiceInterface
 }
+
+func NewAuthHandler(authService domain.AuthServiceInterface) *AuthHandler {
+	return &AuthHandler{authService: authService}
+}
