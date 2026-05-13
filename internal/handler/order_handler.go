@@ -8,47 +8,27 @@ import (
 )
 
 type OrderHandler struct {
-	orderService     domain.OrderRepository
-	orderItemService domain.OrderItemsRepository
+	orderService domain.OrderServiceInterface
 }
 
-func NewOrderHandler(orderService domain.OrderRepository, orderItemService domain.OrderItemsRepository) *OrderHandler {
-	return &OrderHandler{
-		orderService:     orderService,
-		orderItemService: orderItemService,
-	}
+func NewOrderHandler(orderService domain.OrderServiceInterface) *OrderHandler {
+	return &OrderHandler{orderService: orderService}
 }
 
 func (h *OrderHandler) CreateOrderHandler(c *gin.Context) {
-	var input struct {
-		UserId      string   `json:"user_id"`
-		TotalAmount *float64 `json:"total_amount"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		response.Error(c, 400, "invalid request body")
-		return
-	}
+	userID := c.GetString("user_id")
 
-	if input.UserId == "" || input.TotalAmount == nil {
-		response.Error(c, 400, "all fields are required")
-		return
-	}
-
-	order := domain.Order{
-		UserId:      input.UserId,
-		TotalAmount: *input.TotalAmount,
-	}
-
-	err := h.orderService.CreateOrder(order)
+	order, err := h.orderService.Checkout(userID)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
-	response.Success(c, 201, gin.H{"message": "order created"})
+
+	response.Success(c, 201, gin.H{"order_id": order.Id})
 }
 
 func (h *OrderHandler) GetOrderHandler(c *gin.Context) {
@@ -64,94 +44,29 @@ func (h *OrderHandler) GetOrderHandler(c *gin.Context) {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
+
 	response.Success(c, 200, gin.H{"order": order})
 }
 
-func (h *OrderHandler) UpdateStatusHandler(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.Error(c, 400, "id field is required")
-		return
-	}
-	var input struct {
-		Status string `json:"status"`
-	}
-
-	if err := c.ShouldBindJSON(&input); err != nil {
-		response.Error(c, 400, "invalid request body")
-		return
-	}
-
-	if input.Status == "" {
-		response.Error(c, 400, "status field is required")
-		return
-	}
-
-	err := h.orderService.UpdateStatus(id, input.Status)
-	if err != nil {
-		if appErr, ok := err.(*domain.AppError); ok {
-			response.Error(c, appErr.Code, appErr.Message)
-			return
-		}
-		response.Error(c, 500, "Something went wrong")
-		return
-	}
-
-	response.Success(c, 200, gin.H{"message": "order updated"})
-}
-
-func (h *OrderHandler) CreatItemsHandler(c *gin.Context) {
-	var input struct {
-		OrderID   string  `json:"order_id"`
-		ProductID string  `json:"product_id"`
-		Quantity  int     `json:"quantity"`
-		UnitPrice float64 `json:"unit_price"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		response.Error(c, 400, "invalid request body")
-		return
-	}
-
-	if input.OrderID == "" || input.ProductID == "" || input.Quantity == 0 || input.UnitPrice == 0 {
-		response.Error(c, 400, "all fields are required")
-		return
-	}
-	orderItem := domain.OrderItem{
-		OrderID:   input.OrderID,
-		ProductID: input.ProductID,
-		Quantity:  input.Quantity,
-		UnitPrice: input.UnitPrice,
-	}
-
-	err := h.orderItemService.CreatItems(orderItem)
-	if err != nil {
-		if appErr, ok := err.(*domain.AppError); ok {
-			response.Error(c, appErr.Code, appErr.Message)
-			return
-		}
-		response.Error(c, 500, "Something went wrong")
-		return
-	}
-	response.Success(c, 201, gin.H{"message": "order item created"})
-}
-func (h *OrderHandler) GetItemsbyOrderHandler(c *gin.Context) {
+func (h *OrderHandler) GetItemsByOrderHandler(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		response.Error(c, 400, "id field is required")
 		return
 	}
 
-	orders, err := h.orderItemService.GetItemsbyOrder(id)
+	items, err := h.orderService.GetItemsbyOrder(id)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
-	response.Success(c, 200, gin.H{"orders": orders})
+
+	response.Success(c, 200, gin.H{"items": items})
 }

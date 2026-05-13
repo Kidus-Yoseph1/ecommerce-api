@@ -8,83 +8,55 @@ import (
 )
 
 type CartHandler struct {
-	cartService     domain.CartRepository
-	cartItemService domain.CartItemsRepository
+	cartService domain.CartServiceInterface
 }
 
-func NewCartHandler(cartService domain.CartRepository, cartItemService domain.CartItemsRepository) *CartHandler {
-	return &CartHandler{
-		cartService:     cartService,
-		cartItemService: cartItemService,
-	}
+func NewCartHandler(cartService domain.CartServiceInterface) *CartHandler {
+	return &CartHandler{cartService: cartService}
 }
 
 func (h *CartHandler) CreateCartHandler(c *gin.Context) {
-	var input struct {
-		UserId string `json:"user_id"`
-	}
+	userID := c.GetString("user_id")
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		response.Error(c, 400, "invalid request field")
-		return
-	}
-	if input.UserId == "" {
-		response.Error(c, 400, "all fields required")
-		return
-	}
-
-	cart := domain.Cart{
-		UserId: input.UserId,
-	}
-
-	err := h.cartService.CreatCart(cart)
+	err := h.cartService.CreatCart(userID)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
 
-	response.Success(c, 201, gin.H{"message": "product created"})
+	response.Success(c, 201, gin.H{"message": "cart created"})
 }
 
 func (h *CartHandler) GetCartHandler(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.Error(c, 400, "id field is required")
-		return
-	}
+	userID := c.GetString("user_id")
 
-	cart, err := h.cartService.GetCart(id)
+	cart, err := h.cartService.GetCart(userID)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
 
 	response.Success(c, 200, gin.H{"cart": cart})
-
 }
 
 func (h *CartHandler) ClearCartHandler(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
-		response.Error(c, 400, "id field is required")
-		return
-	}
+	userID := c.GetString("user_id")
 
-	err := h.cartService.ClearCart(id)
+	err := h.cartService.ClearCart(userID)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
 
@@ -92,8 +64,9 @@ func (h *CartHandler) ClearCartHandler(c *gin.Context) {
 }
 
 func (h *CartHandler) AddItemHandler(c *gin.Context) {
+	userID := c.GetString("user_id")
+
 	var input struct {
-		CartID    string `json:"cart_id"`
 		ProductID string `json:"product_id"`
 		Quantity  int    `json:"quantity"`
 	}
@@ -102,24 +75,18 @@ func (h *CartHandler) AddItemHandler(c *gin.Context) {
 		response.Error(c, 400, "invalid request body")
 		return
 	}
-	if input.CartID == "" || input.ProductID == "" || input.Quantity == 0 {
+	if input.ProductID == "" || input.Quantity == 0 {
 		response.Error(c, 400, "all fields are required")
 		return
 	}
 
-	cartItem := domain.CartItem{
-		CartID:    input.CartID,
-		ProductID: input.ProductID,
-		Quantity:  input.Quantity,
-	}
-
-	err := h.cartItemService.AddItem(cartItem)
+	err := h.cartService.AddItem(userID, input.ProductID, input.Quantity)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
 
@@ -127,24 +94,21 @@ func (h *CartHandler) AddItemHandler(c *gin.Context) {
 }
 
 func (h *CartHandler) GetItemsHandler(c *gin.Context) {
-	cartId := c.Param("id")
-	if cartId == "" {
-		response.Error(c, 400, "id field is required")
-		return
-	}
+	userID := c.GetString("user_id")
 
-	items, err := h.cartItemService.GetItems(cartId)
+	items, err := h.cartService.GetItems(userID)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
 
 	response.Success(c, 200, gin.H{"items": items})
 }
+
 func (h *CartHandler) RemoveItemHandler(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -152,13 +116,13 @@ func (h *CartHandler) RemoveItemHandler(c *gin.Context) {
 		return
 	}
 
-	err := h.cartItemService.RemoveItem(id)
+	err := h.cartService.RemoveItem(id)
 	if err != nil {
 		if appErr, ok := err.(*domain.AppError); ok {
 			response.Error(c, appErr.Code, appErr.Message)
 			return
 		}
-		response.Error(c, 500, "Something went wrong")
+		response.Error(c, 500, "something went wrong")
 		return
 	}
 
