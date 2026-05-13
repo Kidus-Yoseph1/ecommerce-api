@@ -27,7 +27,7 @@ func (r *ProductRepo) AddProduct(product domain.Product) error {
 	return err
 }
 
-func (r *ProductRepo) GetProductbyId(id string) (*domain.Product, error) {
+func (r *ProductRepo) GetProductByID(id string) (*domain.Product, error) {
 	product := &domain.Product{}
 
 	err := r.db.QueryRow(`
@@ -57,7 +57,7 @@ func (r *ProductRepo) GetProductbyId(id string) (*domain.Product, error) {
 	return product, nil
 }
 
-func (r *ProductRepo) ListProduct(category string) ([]domain.Product, error) {
+func (r *ProductRepo) ListProducts(category string) ([]domain.Product, error) {
 	products := []domain.Product{}
 
 	var rows *sql.Rows

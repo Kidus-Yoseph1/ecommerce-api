@@ -46,6 +46,30 @@ func (r *CartRepo) GetCart(id string) (*domain.Cart, error) {
 	return cart, nil
 }
 
+func (r *CartRepo) GetCartByUserID(userID string) (*domain.Cart, error) {
+	cart := &domain.Cart{}
+
+	err := r.db.QueryRow(`
+		SELECT id, user_id, created_at, updated_at
+		FROM carts
+		WHERE user_id = $1
+	`, userID).Scan(
+		&cart.Id,
+		&cart.UserId,
+		&cart.CreatedAt,
+		&cart.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return cart, nil
+}
+
 func (r *CartRepo) ClearCart(cart_id string) error {
 	_, err := r.db.Exec(`
 		DELETE FROM cart_items WHERE cart_id = $1
@@ -86,6 +110,7 @@ func (r *CartRepo) GetItems(cart_id string) ([]domain.CartItem, error) {
 			&i.CartID,
 			&i.ProductID,
 			&i.Quantity,
+			&i.Price,
 			&i.CreatedAt,
 			&i.UpdatedAt)
 
