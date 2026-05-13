@@ -21,12 +21,19 @@ type OrderItem struct {
 }
 
 type OrderRepository interface {
-	CreateOrder(order Order) error
+	CreateOrder(order Order) (*Order, error)
 	GetOrder(id string) (*Order, error)
 	UpdateStatus(id string, status string) error
 }
 
 type OrderItemsRepository interface {
 	CreatItems(item OrderItem) error
+	GetItemsbyOrder(id string) ([]OrderItem, error)
+}
+
+type OrderServiceInterface interface {
+	Checkout(userID string) (*Order, error)
+	GetOrder(id string) (*Order, error)
+	UpdateStatus(id string, status string) error
 	GetItemsbyOrder(id string) ([]OrderItem, error)
 }

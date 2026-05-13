@@ -21,3 +21,11 @@ type ProductRepository interface {
 	UpdateProduct(product Product) error
 	DeleteProduct(id string) error
 }
+
+type ProductServiceInterface interface {
+	AddProduct(name, description, category string, price float64, stockQuantity int) error
+	GetProductByID(id string) (*Product, error)
+	ListProducts(category string) ([]Product, error)
+	UpdateProduct(id, name, description, category string, price float64, stockQuantity int) error
+	DeleteProduct(id string) error
+}
