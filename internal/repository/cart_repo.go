@@ -70,9 +70,10 @@ func (r *CartRepo) GetItems(cart_id string) ([]domain.CartItem, error) {
 	items := []domain.CartItem{}
 
 	rows, err := r.db.Query(`
-		SELECT id, cart_id, product_id, quantity, created_at, updated_at
-		FROM cart_items
-		WHERE cart_id = $1
+		SELECT ci.id, ci.cart_id, ci.product_id, ci.quantity, p.price, ci.created_at, ci.updated_at
+		FROM cart_items ci
+		JOIN products p ON p.id = ci.product_id
+		WHERE ci.cart_id = $1
 	`, cart_id)
 	if err != nil {
 		return nil, err
