@@ -16,13 +16,13 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		tokenStr := strings.TrimPrefix(authHeader, "Bearer")
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 			return []byte(jwtSecret), nil
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(401, gin.H{"erro": "invalid token"})
+			c.JSON(401, gin.H{"error": "invalid token"})
 			c.Abort()
 			return
 		}
