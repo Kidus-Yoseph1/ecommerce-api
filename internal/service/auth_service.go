@@ -40,7 +40,7 @@ func (s *AuthService) Register(fullName, email, password string) error {
 		FullName:     fullName,
 		Email:        email,
 		PasswordHash: string(hash),
-		Role:         "Customer",
+		Role:         "customer",
 	}
 
 	return s.userRepo.CreateUser(user)
@@ -66,7 +66,7 @@ func (s *AuthService) Login(email, password string) (string, error) {
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := token.SignedString([]byte(s.jwtSecret))
 	if err != nil {
 		return "", domain.ErrInternal("could not create token")

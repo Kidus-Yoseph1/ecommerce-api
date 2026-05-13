@@ -27,8 +27,8 @@ func (s *ProductService) AddProduct(name string, description string, category st
 	return nil
 }
 
-func (s *ProductService) GetProductbyId(id string) (*domain.Product, error) {
-	product, err := s.productRepo.GetProductbyId(id)
+func (s *ProductService) GetProductByID(id string) (*domain.Product, error) {
+	product, err := s.productRepo.GetProductByID(id)
 	if err != nil {
 		return nil, domain.ErrInternal("Something went wrong")
 	}
@@ -38,8 +38,8 @@ func (s *ProductService) GetProductbyId(id string) (*domain.Product, error) {
 	return product, nil
 }
 
-func (s *ProductService) ListProduct(category string) ([]domain.Product, error) {
-	products, err := s.productRepo.ListProduct(category)
+func (s *ProductService) ListProducts(category string) ([]domain.Product, error) {
+	products, err := s.productRepo.ListProducts(category)
 	if err != nil {
 		return nil, domain.ErrInternal("Something went wrong")
 	}
@@ -67,7 +67,7 @@ func (s *ProductService) UpdateProduct(id string, name string, description strin
 }
 
 func (s *ProductService) DeleteProduct(id string) error {
-	existing, err := s.productRepo.GetProductbyId(id)
+	existing, err := s.productRepo.GetProductByID(id)
 	if err != nil {
 		return domain.ErrInternal("Something went wrong")
 	}

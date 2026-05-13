@@ -5,40 +5,43 @@ import (
 )
 
 type OrderService struct {
-	orderRepo     domain.OrderRepository
-	orderItemRepo domain.OrderItemsRepository
-	cartRepo      domain.CartRepository
-	cartItemRepo  domain.CartItemsRepository
+	orderRepo      domain.OrderRepository
+	orderItemRepo  domain.OrderItemsRepository
+	cartRepo       domain.CartRepository
+	cartItemRepo   domain.CartItemsRepository
+	paymentService domain.PaymentServiceInterface
 }
 
 func NewOrderService(orderRepo domain.OrderRepository,
 	orderItemRepo domain.OrderItemsRepository,
 	cartRepo domain.CartRepository,
 	cartItemRepo domain.CartItemsRepository,
+	paymentService domain.PaymentServiceInterface,
 ) *OrderService {
 	return &OrderService{
-		orderRepo:     orderRepo,
-		orderItemRepo: orderItemRepo,
-		cartRepo:      cartRepo,
-		cartItemRepo:  cartItemRepo,
+		orderRepo:      orderRepo,
+		orderItemRepo:  orderItemRepo,
+		cartRepo:       cartRepo,
+		cartItemRepo:   cartItemRepo,
+		paymentService: paymentService,
 	}
 }
 
-func (s *OrderService) Checkout(userID string) (*domain.Order, error) {
+func (s *OrderService) Checkout(userID string) (*domain.Order, string, error) {
 	cart, err := s.cartRepo.GetCartByUserID(userID)
 	if err != nil {
-		return nil, domain.ErrInternal("something went wrong")
+		return nil, "", domain.ErrInternal("something went wrong")
 	}
 	if cart == nil {
-		return nil, domain.ErrNotFound("cart not found")
+		return nil, "", domain.ErrNotFound("cart not found")
 	}
 
 	items, err := s.cartItemRepo.GetItems(cart.Id)
 	if err != nil {
-		return nil, domain.ErrInternal("something went wrong")
+		return nil, "", domain.ErrInternal("something went wrong")
 	}
 	if len(items) == 0 {
-		return nil, domain.ErrBadRequest("cart is empty")
+		return nil, "", domain.ErrBadRequest("cart is empty")
 	}
 
 	var total float64
@@ -52,7 +55,7 @@ func (s *OrderService) Checkout(userID string) (*domain.Order, error) {
 		Status:      "pending",
 	})
 	if err != nil {
-		return nil, domain.ErrInternal("could not create order")
+		return nil, "", domain.ErrInternal("could not create order")
 	}
 
 	for _, item := range items {
@@ -63,18 +66,17 @@ func (s *OrderService) Checkout(userID string) (*domain.Order, error) {
 			UnitPrice: item.Price,
 		})
 		if err != nil {
-			return nil, domain.ErrInternal("could not create order items")
+			return nil, "", domain.ErrInternal("could not create order items")
 		}
 	}
 
-	err = s.cartRepo.ClearCart(cart.Id)
+	clientSecret, err := s.paymentService.CreatePaymentIntent(order.Id, total)
 	if err != nil {
-		return nil, domain.ErrInternal("could not clear cart")
+		return nil, "", domain.ErrInternal("could not create payment")
 	}
 
-	return order, nil
+	return order, clientSecret, nil
 }
-
 func (s *OrderService) GetOrder(id string) (*domain.Order, error) {
 	order, err := s.orderRepo.GetOrder(id)
 	if err != nil {
