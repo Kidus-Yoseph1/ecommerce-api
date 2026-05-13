@@ -16,62 +16,81 @@ func NewCartService(cartRepo domain.CartRepository, cartItemRepo domain.CartItem
 	}
 }
 
-func (s *CartService) CreatCart(user_id string) error {
+func (s *CartService) CreatCart(userID string) error {
 	cart := domain.Cart{
-		UserId: user_id,
+		UserId: userID,
 	}
 	err := s.cartRepo.CreatCart(cart)
 	if err != nil {
-		return domain.ErrInternal("Something went wrong")
+		return domain.ErrInternal("something went wrong")
 	}
 	return nil
 }
 
-func (s *CartService) GetCart(id string) (*domain.Cart, error) {
-	cart, err := s.cartRepo.GetCart(id)
+func (s *CartService) GetCart(userID string) (*domain.Cart, error) {
+	cart, err := s.cartRepo.GetCartByUserID(userID)
 	if err != nil {
-		return nil, domain.ErrInternal("Something went wrong")
+		return nil, domain.ErrInternal("something went wrong")
+	}
+	if cart == nil {
+		return nil, domain.ErrNotFound("cart not found")
 	}
 	return cart, nil
 }
 
-func (s *CartService) ClearCart(id string) error {
-	existing, err := s.cartRepo.GetCart(id)
+func (s *CartService) ClearCart(userID string) error {
+	cart, err := s.cartRepo.GetCartByUserID(userID)
 	if err != nil {
-		return domain.ErrInternal("Something went wrong")
+		return domain.ErrInternal("something went wrong")
 	}
-	if existing == nil {
-		return domain.ErrNotFound("Cart is empty")
+	if cart == nil {
+		return domain.ErrNotFound("cart not found")
 	}
 
-	err = s.cartRepo.ClearCart(id)
+	err = s.cartRepo.ClearCart(cart.Id)
 	if err != nil {
-		return domain.ErrInternal("Something wnet wrong")
+		return domain.ErrInternal("something went wrong")
 	}
 	return nil
 }
 
-func (s *CartService) AddItem(cart_id string, product_id string, quantity int) error {
+func (s *CartService) AddItem(userID, productID string, quantity int) error {
+	cart, err := s.cartRepo.GetCartByUserID(userID)
+	if err != nil {
+		return domain.ErrInternal("something went wrong")
+	}
+	if cart == nil {
+		return domain.ErrNotFound("cart not found")
+	}
+
 	item := domain.CartItem{
-		CartID:    cart_id,
-		ProductID: product_id,
+		CartID:    cart.Id,
+		ProductID: productID,
 		Quantity:  quantity,
 	}
 
-	err := s.cartItemRepo.AddItem(item)
+	err = s.cartItemRepo.AddItem(item)
 	if err != nil {
-		return domain.ErrInternal("Something went wrong")
+		return domain.ErrInternal("something went wrong")
 	}
 	return nil
 }
 
-func (s *CartService) GetItems(id string) ([]domain.CartItem, error) {
-	items, err := s.cartItemRepo.GetItems(id)
+func (s *CartService) GetItems(userID string) ([]domain.CartItem, error) {
+	cart, err := s.cartRepo.GetCartByUserID(userID)
 	if err != nil {
-		return nil, domain.ErrInternal("Something went wrong")
+		return nil, domain.ErrInternal("something went wrong")
+	}
+	if cart == nil {
+		return nil, domain.ErrNotFound("cart not found")
+	}
+
+	items, err := s.cartItemRepo.GetItems(cart.Id)
+	if err != nil {
+		return nil, domain.ErrInternal("something went wrong")
 	}
 	if len(items) == 0 {
-		return nil, nil
+		return nil, domain.ErrNotFound("cart is empty")
 	}
 
 	return items, nil
@@ -80,7 +99,7 @@ func (s *CartService) GetItems(id string) ([]domain.CartItem, error) {
 func (s *CartService) RemoveItem(id string) error {
 	err := s.cartItemRepo.RemoveItem(id)
 	if err != nil {
-		return domain.ErrInternal("Somethig went wrong")
+		return domain.ErrInternal("something went wrong")
 	}
 	return nil
 }
