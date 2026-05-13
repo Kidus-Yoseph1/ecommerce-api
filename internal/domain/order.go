@@ -32,8 +32,7 @@ type OrderItemsRepository interface {
 }
 
 type OrderServiceInterface interface {
-	Checkout(userID string) (*Order, error)
+	Checkout(userID string) (*Order, string, error)
 	GetOrder(id string) (*Order, error)
-	UpdateStatus(id string, status string) error
 	GetItemsbyOrder(id string) ([]OrderItem, error)
 }

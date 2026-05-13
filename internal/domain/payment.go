@@ -14,10 +14,11 @@ type Payment struct {
 
 type PaymentRepository interface {
 	CreatePayment(payment Payment) error
-	UpdatePaymentStatus(id string, status string) error
+	UpdatePaymentStatus(stripePaymentIntentID string, status string) error
+	GetPaymentByStripeID(stripeID string) (*Payment, error)
 }
 
 type PaymentServiceInterface interface {
-	CreatePayment(payment Payment) error
-	UpdatePaymentStatus(id string, status string) error
+	CreatePaymentIntent(orderID string, amount float64) (string, error)
+	HandleWebhook(payload []byte, signature string, webhookSecret string) error
 }

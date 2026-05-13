@@ -16,8 +16,8 @@ type Product struct {
 
 type ProductRepository interface {
 	AddProduct(product Product) error
-	GetProductbyId(id string) (*Product, error)
-	ListProduct(category string) ([]Product, error)
+	GetProductByID(id string) (*Product, error)
+	ListProducts(category string) ([]Product, error)
 	UpdateProduct(product Product) error
 	DeleteProduct(id string) error
 }
