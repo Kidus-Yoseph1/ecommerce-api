@@ -14,12 +14,23 @@ func NewOrderRepo(db *sql.DB) *OrderRepo {
 	return &OrderRepo{db: db}
 }
 
-func (r *OrderRepo) CreateOrder(order domain.Order) error {
-	_, err := r.db.Exec(`
-		INSERT INTO orders (user_id, total_amount, status)
-		VALUES ($1, $2, $3)
-	`, order.UserId, order.TotalAmount, order.Status)
-	return err
+func (r *OrderRepo) CreateOrder(order domain.Order) (*domain.Order, error) {
+	err := r.db.QueryRow(`
+        INSERT INTO orders (user_id, total_amount, status)
+        VALUES ($1, $2, $3)
+        RETURNING id, user_id, total_amount, status, created_at, updated_at
+    `, order.UserId, order.TotalAmount, order.Status).Scan(
+		&order.Id,
+		&order.UserId,
+		&order.TotalAmount,
+		&order.Status,
+		&order.CreatedAt,
+		&order.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &order, nil
 }
 
 func (r *OrderRepo) GetOrder(id string) (*domain.Order, error) {
