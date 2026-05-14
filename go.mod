@@ -8,7 +8,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.12.3
 	github.com/stripe/stripe-go/v76 v76.25.0
-	github.com/stripe/stripe-go/v82 v82.5.1
 	golang.org/x/crypto v0.50.0
 )
 
