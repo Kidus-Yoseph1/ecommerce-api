@@ -14,6 +14,19 @@ A production-ready RESTful ecommerce API built with **Go**, **PostgreSQL**, and 
 - **Stripe Payments** — PaymentIntent creation and webhook handling
 - **Clean Architecture** — handler → service → repository, fully separated layers
 - **Docker Ready** — single command to spin up the entire stack
+- **React Frontend** — modern light-mode UI with golden brand theme
+
+<br/>
+
+## UI Screenshots
+
+<div align="center">
+  <img src="assets/home page.png" width="48%" alt="Home Page" />
+  <img src="assets/auth.png" width="48%" alt="Auth Page" />
+  <br/><br/>
+  <img src="assets/cart.png" width="48%" alt="Cart Page" />
+  <img src="assets/checkout.png" width="48%" alt="Checkout Page" />
+</div>
 
 <br/>
 
