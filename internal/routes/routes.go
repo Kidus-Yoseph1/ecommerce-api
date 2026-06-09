@@ -29,6 +29,7 @@ func Setup(
 		// cart
 		protected.POST("/cart", cartHandler.CreateCartHandler)
 		protected.GET("/cart", cartHandler.GetCartHandler)
+		protected.GET("/cart/items", cartHandler.GetItemsHandler)
 		protected.POST("/cart/items", cartHandler.AddItemHandler)
 		protected.DELETE("/cart/items/:id", cartHandler.RemoveItemHandler)
 
